@@ -6,10 +6,11 @@ import GridCellComponent from './GridCell';
 interface Props {
   grid: GridCell[];
   currentRound: number;
+  isPlaced: boolean;
   isRevealing: boolean;
 }
 
-export default function Grid({ grid, currentRound, isRevealing }: Props) {
+export default function Grid({ grid, currentRound, isPlaced, isRevealing }: Props) {
   const currentCellIndex = currentRound - 1;
 
   // 完成したラインを計算（ゲーム全体で表示）
@@ -29,6 +30,7 @@ export default function Grid({ grid, currentRound, isRevealing }: Props) {
           cell={cell}
           index={i}
           isCurrent={i === currentCellIndex}
+          isPlaced={isPlaced && i === currentCellIndex}
           isRevealing={isRevealing && i === currentCellIndex}
           winnerLines={winnerLines}
         />

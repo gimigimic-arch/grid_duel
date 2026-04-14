@@ -19,7 +19,8 @@ export interface GridCell {
 export type GamePhase =
   | 'MULLIGAN'    // ゲーム開始前のマリガンフェーズ
   | 'SELECTING'   // プレイヤーが手札から選択中
-  | 'REVEALING'   // 両カードをフリップ中
+  | 'PLACED'      // 両カードが伏せてグリッドに置かれた状態
+  | 'REVEALING'   // 両カードをフリップ中（拡大オーバーレイ表示）
   | 'RESOLVING'   // 勝敗判定・グリッド更新
   | 'NEXT_ROUND'  // 次ラウンドへの待機
   | 'GAME_OVER';  // ゲーム終了

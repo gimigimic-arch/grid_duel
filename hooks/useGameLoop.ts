@@ -4,8 +4,7 @@ import { useGameStore } from '@/store/gameStore';
 /**
  * フェーズの自動進行を管理するフック
  *
- * REVEALING → (1200ms) → RESOLVING → (700ms) → NEXT_ROUND → (500ms or 1800ms) → SELECTING
- * ドロー発生時は NEXT_ROUND を 1800ms に延長して通知を見せる
+ * PLACED → (600ms) → REVEALING → (1400ms) → RESOLVING → (700ms) → NEXT_ROUND → (500ms or 1800ms) → SELECTING
  */
 export function useGameLoop() {
   const phase = useGameStore((s) => s.phase);
@@ -13,8 +12,14 @@ export function useGameLoop() {
   const advancePhase = useGameStore((s) => s.advancePhase);
 
   useEffect(() => {
+    if (phase === 'PLACED') {
+      // 伏せカードを見せる最小時間 → フリップへ
+      const t = setTimeout(() => advancePhase(), 600);
+      return () => clearTimeout(t);
+    }
     if (phase === 'REVEALING') {
-      const t = setTimeout(() => advancePhase(), 1200);
+      // RevealOverlay を表示する時間（フリップ + 勝敗テキスト表示）
+      const t = setTimeout(() => advancePhase(), 1400);
       return () => clearTimeout(t);
     }
     if (phase === 'RESOLVING') {

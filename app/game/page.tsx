@@ -8,6 +8,7 @@ import Hand from '@/components/Hand';
 import ScoreBoard from '@/components/ScoreBoard';
 import GameOverModal from '@/components/GameOverModal';
 import PlayingCard from '@/components/PlayingCard';
+import RevealOverlay from '@/components/RevealOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
@@ -16,7 +17,9 @@ export default function GamePage() {
     phase,
     round,
     playerHand,
+    cpuHand,
     selectedCard,
+    cpuSelectedCard,
     grid,
     playerScore,
     cpuScore,
@@ -37,10 +40,15 @@ export default function GamePage() {
 
   // マリガン画面: 入れ替えるカードの選択状態（ローカル）
   const [selectedForMulligan, setSelectedForMulligan] = useState<Set<string>>(new Set());
+  // 捨て札モーダル
+  const [discardOpen, setDiscardOpen] = useState(false);
 
-  // ゲームリセット時に選択をクリア
+  // フェーズがMULLIGANに戻ったら選択をリセット
   useEffect(() => {
-    if (phase === 'MULLIGAN') setSelectedForMulligan(new Set());
+    if (phase === 'MULLIGAN') {
+      setSelectedForMulligan(new Set());
+      setDiscardOpen(false);
+    }
   }, [phase]);
 
   const toggleMulliganCard = (id: string) => {
@@ -52,20 +60,10 @@ export default function GamePage() {
   };
 
   const isSelecting = phase === 'SELECTING';
+  const isPlaced   = phase === 'PLACED';
   const isRevealing = phase === 'REVEALING';
-  const isGameOver = phase === 'GAME_OVER';
-  const isMulligan = phase === 'MULLIGAN';
-
-  const suitMatchLabel = lastSuitMatch ? ' ✦スート一致！' : '';
-  const resultMessage =
-    lastResult === 'player' ? `あなたの制圧！${suitMatchLabel}` :
-    lastResult === 'cpu'    ? `CPUの制圧${suitMatchLabel}` :
-    lastResult === 'tie'    ? '引き分け' : null;
-
-  const resultColor =
-    lastResult === 'player' ? (lastSuitMatch ? 'text-yellow-300' : 'text-blue-400') :
-    lastResult === 'cpu'    ? (lastSuitMatch ? 'text-orange-400' : 'text-red-400') :
-    'text-slate-400';
+  const isGameOver  = phase === 'GAME_OVER';
+  const isMulligan  = phase === 'MULLIGAN';
 
   // ---- マリガン画面 ----
   if (isMulligan) {
@@ -87,19 +85,15 @@ export default function GamePage() {
           </p>
         </div>
 
-        {/* 手札（選択可能） */}
-        <div className="flex flex-wrap justify-center gap-2">
-          {playerHand.map((card) => (
-            <PlayingCard
-              key={card.id}
-              card={card}
-              selected={selectedForMulligan.has(card.id)}
-              onClick={() => toggleMulliganCard(card.id)}
-            />
-          ))}
-        </div>
+        {/* 手札（ファンレイアウト、マリガン選択可能） */}
+        <Hand
+          hand={playerHand}
+          selectedCard={null}
+          onSelect={() => {}}
+          mulliganSelected={selectedForMulligan}
+          onMulliganToggle={toggleMulliganCard}
+        />
 
-        {/* 選択枚数インジケーター */}
         <p className="text-xs font-mono text-slate-400">
           {selectedCount > 0 ? `${selectedCount}枚選択中` : '（選択なしで開始 = マリガンなし）'}
         </p>
@@ -124,15 +118,18 @@ export default function GamePage() {
     );
   }
 
+  const hasDiscard = mulliganDiscardPlayer.length > 0 || mulliganDiscardCpu.length > 0;
+
   // ---- ゲーム画面 ----
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center px-4 py-6 gap-4">
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center px-3 py-4 gap-3">
+
       {/* ヘッダー */}
       <div className="flex items-center justify-between w-full max-w-sm">
         <Link href="/" className="text-slate-500 hover:text-slate-300 text-sm transition-colors">
           ← メニュー
         </Link>
-        <h1 className="text-lg font-bold text-slate-200 font-mono tracking-widest">GRID DUEL</h1>
+        <h1 className="text-base font-bold text-slate-200 font-mono tracking-widest">GRID DUEL</h1>
         <div className="w-16 text-right">
           {playerMulliganed && (
             <span className="text-[10px] text-slate-600 font-mono">マリガン済</span>
@@ -140,87 +137,56 @@ export default function GamePage() {
         </div>
       </div>
 
-      {/* スコア */}
+      {/* スコア + 優勢バー */}
       <ScoreBoard playerScore={playerScore} cpuScore={cpuScore} round={round} />
 
-      {/* ルール説明 */}
-      <details className="w-full max-w-sm">
-        <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-400 font-mono">
-          ルール確認 ▾
-        </summary>
-        <div className="mt-1 text-xs text-slate-400 bg-slate-900 rounded-lg p-3 space-y-1">
-          <p>🃏 基本: 高い方が制圧 → 1点</p>
-          <p>✦ スート一致（♠vs♠など）: 低い方が制圧 → 2点！</p>
-          <p>⚪ 同値 → 引き分け（誰も取れない）</p>
-          <p>✨ 縦横斜え3マス並び → +1点ボーナス</p>
-          <p>⭕ 中央マスは0点（スート一致でも0点）</p>
-        </div>
-      </details>
-
-      {/* グリッド */}
-      <Grid grid={grid} currentRound={round} isRevealing={isRevealing} />
-
-      {/* マリガン捨て札（両者公開） */}
-      {(mulliganDiscardPlayer.length > 0 || mulliganDiscardCpu.length > 0) && (
-        <div className="w-full max-w-sm flex gap-4">
-          {mulliganDiscardPlayer.length > 0 && (
-            <div>
-              <p className="text-[10px] text-slate-600 font-mono mb-1">あなたの捨て札</p>
-              <div className="flex gap-1 flex-wrap">
-                {mulliganDiscardPlayer.map((c) => (
-                  <PlayingCard key={c.id} card={c} small />
-                ))}
-              </div>
-            </div>
-          )}
-          {mulliganDiscardCpu.length > 0 && (
-            <div>
-              <p className="text-[10px] text-slate-600 font-mono mb-1">CPUの捨て札</p>
-              <div className="flex gap-1 flex-wrap">
-                {mulliganDiscardCpu.map((c) => (
-                  <PlayingCard key={c.id} card={c} small />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ラウンド結果メッセージ */}
-      <AnimatePresence mode="wait">
-        {resultMessage && phase !== 'GAME_OVER' && (
-          <motion.div
-            key={`${round}-${lastResult}`}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            className={`font-bold ${resultColor} ${lastSuitMatch ? 'text-base' : 'text-sm'}`}
-          >
-            {resultMessage}
-          </motion.div>
+      {/* CPU エリア */}
+      <div className="w-full max-w-sm flex items-center justify-between px-1">
+        <span className="text-xs text-slate-500 font-mono">CPU 手札: {cpuHand.length}枚</span>
+        {(isPlaced || isRevealing) && (
+          <span className="text-xs text-yellow-400 font-mono animate-pulse">カード選択済み</span>
         )}
-      </AnimatePresence>
+      </div>
 
-      {/* ドロー通知（中身は非公開） */}
-      <AnimatePresence>
-        {phase === 'NEXT_ROUND' && (pendingDraw.player || pendingDraw.cpu) && (
-          <motion.div
-            key="draw-notice"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="text-xs font-mono text-slate-400"
-          >
-            {pendingDraw.player ? 'あなたが1枚ドロー' : 'CPUが1枚ドロー'}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* 3×3 グリッド */}
+      <div className="w-full relative">
+        <Grid grid={grid} currentRound={round} isPlaced={isPlaced} isRevealing={isRevealing} />
+      </div>
 
-      {/* プレイヤーの手札 — タップで即決定 */}
-      <div className="w-full max-w-sm">
-        <div className="text-xs text-slate-500 font-mono mb-2 text-center">
-          {isSelecting ? 'カードをタップして出す' : '　'}
+      {/* ラウンド結果 + ドロー通知 */}
+      <div className="h-6 flex items-center justify-center">
+        <AnimatePresence mode="wait">
+          {phase === 'NEXT_ROUND' && (pendingDraw.player || pendingDraw.cpu) ? (
+            <motion.span
+              key="draw"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="text-xs font-mono text-slate-400"
+            >
+              {pendingDraw.player ? 'あなたが1枚ドロー' : 'CPUが1枚ドロー'}
+            </motion.span>
+          ) : null}
+        </AnimatePresence>
+      </div>
+
+      {/* プレイヤーエリア */}
+      <div className="w-full max-w-sm space-y-2">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs text-slate-500 font-mono">
+            {isSelecting ? 'カードをタップして出す' : phase === 'PLACED' ? 'カード伏せ中...' : '　'}
+          </span>
+          {hasDiscard && (
+            <button
+              onClick={() => setDiscardOpen(true)}
+              className="text-[10px] text-slate-500 hover:text-slate-300 font-mono underline transition-colors"
+            >
+              捨て札
+            </button>
+          )}
         </div>
+
+        {/* 手札（ファンレイアウト） */}
         <Hand
           hand={playerHand}
           selectedCard={selectedCard}
@@ -229,16 +195,78 @@ export default function GamePage() {
         />
       </div>
 
-      {/* 状態表示 */}
-      {!isSelecting && phase !== 'GAME_OVER' && (
+      {/* 状態インジケーター */}
+      {!isSelecting && phase !== 'GAME_OVER' && phase !== 'NEXT_ROUND' && phase !== 'PLACED' && phase !== 'REVEALING' && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-slate-500 text-sm font-mono animate-pulse"
+          className="text-slate-600 text-xs font-mono animate-pulse"
         >
-          {phase === 'REVEALING' ? 'カードをめくっています...' : '判定中...'}
+          判定中...
         </motion.div>
       )}
+
+      {/* カードオープン演出オーバーレイ */}
+      <RevealOverlay
+        show={isRevealing}
+        playerCard={selectedCard}
+        cpuCard={cpuSelectedCard}
+        result={lastResult}
+        suitMatch={lastSuitMatch}
+      />
+
+      {/* 捨て札モーダル */}
+      <AnimatePresence>
+        {discardOpen && (
+          <motion.div
+            key="discard-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setDiscardOpen(false)}
+            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-slate-900 rounded-2xl p-5 w-full max-w-sm space-y-4"
+            >
+              <h2 className="text-slate-200 font-bold text-sm font-mono">マリガン捨て札</h2>
+
+              {mulliganDiscardPlayer.length > 0 && (
+                <div>
+                  <p className="text-[11px] text-slate-500 font-mono mb-2">あなたの捨て札</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {mulliganDiscardPlayer.map((c) => (
+                      <PlayingCard key={c.id} card={c} small />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {mulliganDiscardCpu.length > 0 && (
+                <div>
+                  <p className="text-[11px] text-slate-500 font-mono mb-2">CPUの捨て札</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {mulliganDiscardCpu.map((c) => (
+                      <PlayingCard key={c.id} card={c} small />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => setDiscardOpen(false)}
+                className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold transition-colors"
+              >
+                閉じる
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ゲームオーバーモーダル */}
       {isGameOver && winner && (

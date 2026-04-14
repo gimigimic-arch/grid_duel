@@ -103,21 +103,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
 
-  // カード選択と同時にCPUも決定して即REVEALING
+  // カード選択と同時にCPUも決定 → 伏せ配置（PLACED）へ
   selectCard: (card) => {
     const { phase, cpuHand, grid, round } = get();
     if (phase !== 'SELECTING') return;
 
     const cellIndex = round - 1;
     const cpuCard = chooseCpuCard(cpuHand, grid, cellIndex);
-    set({ selectedCard: card, cpuSelectedCard: cpuCard, phase: 'REVEALING' });
+    set({ selectedCard: card, cpuSelectedCard: cpuCard, phase: 'PLACED' });
   },
 
   advancePhase: () => {
     const state = get();
     const { phase, round, selectedCard, cpuSelectedCard, grid, playerHand, cpuHand, remainingDeck } = state;
 
-    if (phase === 'REVEALING') {
+    if (phase === 'PLACED') {
+      // 伏せカードが置かれた → フリップへ
+      set({ phase: 'REVEALING' });
+    } else if (phase === 'REVEALING') {
       if (!selectedCard || !cpuSelectedCard) return;
 
       const cellIndex = round - 1;
