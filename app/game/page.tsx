@@ -85,14 +85,37 @@ export default function GamePage() {
           </p>
         </div>
 
-        {/* 手札（ファンレイアウト、マリガン選択可能） */}
-        <Hand
-          hand={playerHand}
-          selectedCard={null}
-          onSelect={() => {}}
-          mulliganSelected={selectedForMulligan}
-          onMulliganToggle={toggleMulliganCard}
-        />
+        {/* 手札（マリガン用: 5枚+残り の2行固定、幅依存なし） */}
+        <div className="flex flex-col items-center gap-2">
+          {[playerHand.slice(0, 5), playerHand.slice(5)].map((row, ri) => (
+            <div key={ri} className="flex gap-2">
+              {row.map((card) => {
+                const isMarked = selectedForMulligan.has(card.id);
+                return (
+                  <div
+                    key={card.id}
+                    className="relative cursor-pointer"
+                    style={{
+                      transform: isMarked ? 'translateY(-12px)' : 'translateY(0)',
+                      transition: 'transform 0.15s ease',
+                    }}
+                    onClick={() => toggleMulliganCard(card.id)}
+                  >
+                    <PlayingCard card={card} selected={isMarked} />
+                    {isMarked && (
+                      <div className="absolute inset-0 rounded-xl border-2 border-red-400 pointer-events-none" />
+                    )}
+                    {isMarked && (
+                      <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center pointer-events-none">
+                        <span className="text-white text-[10px] font-black leading-none">✕</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
 
         <p className="text-xs font-mono text-slate-400">
           {selectedCount > 0 ? `${selectedCount}枚選択中` : '（選択なしで開始 = マリガンなし）'}

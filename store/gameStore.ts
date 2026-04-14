@@ -110,7 +110,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const cellIndex = round - 1;
     const cpuCard = chooseCpuCard(cpuHand, grid, cellIndex);
-    set({ selectedCard: card, cpuSelectedCard: cpuCard, phase: 'PLACED' });
+
+    // REVEALING フェーズで正しい結果を表示するため先計算
+    const tempGrid = applyRound(grid, cellIndex, card, cpuCard);
+    const cell = tempGrid[cellIndex];
+    const previewResult: 'player' | 'cpu' | 'tie' =
+      cell.owner === 'player' ? 'player' : cell.owner === 'cpu' ? 'cpu' : 'tie';
+
+    set({
+      selectedCard: card,
+      cpuSelectedCard: cpuCard,
+      phase: 'PLACED',
+      lastResult: previewResult,
+      lastSuitMatch: cell.suitMatch,
+    });
   },
 
   advancePhase: () => {
