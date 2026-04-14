@@ -8,12 +8,11 @@ interface Props {
   cell: GridCellType;
   index: number;
   isCurrent: boolean;
-  isPlaced: boolean;    // 両カードが伏せて置かれた状態
   isRevealing: boolean;
   winnerLines: number[][];
 }
 
-export default function GridCellComponent({ cell, index, isCurrent, isPlaced, isRevealing, winnerLines }: Props) {
+export default function GridCellComponent({ cell, index, isCurrent, isRevealing, winnerLines }: Props) {
   const isCenter = index === CENTER_INDEX;
   const isInWinnerLine = winnerLines.some((line) => line.includes(index));
   const isCaptured = !!cell.owner;
@@ -76,23 +75,8 @@ export default function GridCellComponent({ cell, index, isCurrent, isPlaced, is
         </span>
       )}
 
-      {/* PLACED: 両カードが伏せて置かれた状態（裏面×2） */}
-      {isPlaced && isCurrent && !isCaptured && (
-        <div className="flex gap-1 items-center">
-          <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[9px] text-slate-500 font-mono">CPU</span>
-            <FaceDownCard />
-          </div>
-          <span className="text-slate-600 text-xs">vs</span>
-          <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[9px] text-slate-500 font-mono">YOU</span>
-            <FaceDownCard />
-          </div>
-        </div>
-      )}
-
       {/* 空マス */}
-      {!isCaptured && !isPlaced && (
+      {!isCaptured && (
         <span className="text-slate-700 text-2xl select-none">
           {isCurrent ? '▶' : '·'}
         </span>
@@ -113,21 +97,6 @@ export default function GridCellComponent({ cell, index, isCurrent, isPlaced, is
         </div>
       )}
 
-    </motion.div>
-  );
-}
-
-// 裏面カード（PLACED フェーズ用）
-function FaceDownCard() {
-  return (
-    <motion.div
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.2 }}
-      style={{ width: 48, height: 67 }}
-      className="rounded-md bg-gradient-to-br from-slate-600 to-slate-800 border border-slate-500 flex items-center justify-center"
-    >
-      <span className="text-slate-400 text-xl select-none">🂠</span>
     </motion.div>
   );
 }

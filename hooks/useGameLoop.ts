@@ -13,8 +13,8 @@ export function useGameLoop() {
 
   useEffect(() => {
     if (phase === 'PLACED') {
-      // 伏せカードを見せる最小時間 → フリップへ
-      const t = setTimeout(() => advancePhase(), 600);
+      // DUEL! 演出を見せる時間 → フリップへ
+      const t = setTimeout(() => advancePhase(), 1200);
       return () => clearTimeout(t);
     }
     if (phase === 'REVEALING') {

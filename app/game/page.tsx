@@ -150,7 +150,7 @@ export default function GamePage() {
 
       {/* 3×3 グリッド */}
       <div className="w-full relative">
-        <Grid grid={grid} currentRound={round} isPlaced={isPlaced} isRevealing={isRevealing} />
+        <Grid grid={grid} currentRound={round} isRevealing={isRevealing} />
       </div>
 
       {/* ラウンド結果 + ドロー通知 */}
@@ -208,7 +208,8 @@ export default function GamePage() {
 
       {/* カードオープン演出オーバーレイ */}
       <RevealOverlay
-        show={isRevealing}
+        show={isPlaced || isRevealing}
+        isPlaced={isPlaced}
         playerCard={selectedCard}
         cpuCard={cpuSelectedCard}
         result={lastResult}

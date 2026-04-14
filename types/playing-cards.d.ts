@@ -27,6 +27,9 @@ declare module '@letele/playing-cards' {
   export const C10: C; export const Cj: C; export const Cq: C; export const Ck: C;
   export const Ca: C;
 
-  // Jokers
+  // Card backs
   export const B1: C; export const B2: C;
+
+  // Jokers
+  export const J1: C; export const J2: C;
 }
