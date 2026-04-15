@@ -68,8 +68,8 @@ export default function GridCellComponent({ cell, index, isCurrent, isRevealing,
         <span className="absolute top-1 right-1 text-[10px] text-slate-600 font-mono">0pt</span>
       )}
 
-      {/* スート一致バッジ */}
-      {cell.suitMatch && isCaptured && (
+      {/* スート一致バッジ（中央マスは0ptなので非表示） */}
+      {cell.suitMatch && isCaptured && !isCenter && (
         <span className={`absolute top-1 left-1 text-[10px] font-bold ${isPlayerWin ? 'text-yellow-400' : 'text-slate-500'}`}>
           ✦2pt
         </span>

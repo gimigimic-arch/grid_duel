@@ -12,13 +12,27 @@ export default function Home() {
         </p>
       </div>
 
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-sm w-full space-y-3">
-        <h2 className="text-slate-300 font-bold text-center mb-4">ルール</h2>
-        <Rule icon="🃏" text="基本: 高い方が制圧 → 1点" />
-        <Rule icon="✦" text="スート一致（♠vs♠など）: 低い方が制圧 → 2点！" />
-        <Rule icon="⚪" text="同値 → 引き分け（誰も取れない）" />
-        <Rule icon="✨" text="縦横斜え3マス並び → +1点ボーナス" />
-        <Rule icon="⭕" text="中央マスは0点（スート一致でも0点）" />
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full overflow-hidden">
+        {/* ヘッダー */}
+        <div className="border-b border-slate-700 px-6 py-4 text-center space-y-1">
+          <h2 className="text-emerald-400 font-bold tracking-[0.25em] font-mono text-base mb-2">RULE</h2>
+          <p className="text-slate-200 text-base font-bold">9マスを奪い合い、得点が多い方の勝ち。</p>
+        </div>
+        {/* ルール本文 */}
+        <div className="px-6 py-4 space-y-3">
+          <Rule icon="▷" text="基本：強い方が制圧 → 1pt" />
+          <p className="text-slate-500 text-xs pl-8">A最強・2最弱（数字が大きいほど強い）</p>
+          <div className="border-t border-slate-700 pt-3 space-y-2">
+            <Rule icon="✦" text="スート一致：弱い方が制圧 → 2pt" small />
+            <Rule icon="⚪" text="同じ数字 → 引き分け" small />
+            <Rule icon="✨" text="制圧マスが3列並び → +1pt" small />
+            <Rule icon="⭕" text="中央マスは → 0pt" small />
+          </div>
+          <div className="border-t border-slate-700 pt-3 space-y-2">
+            <Rule icon="🔄" text="開始前に手札を引き直せる（1回）" small />
+            <Rule icon="📥" text="制圧された側が山札から1枚引く" small />
+          </div>
+        </div>
       </div>
 
       <Link
@@ -35,11 +49,11 @@ export default function Home() {
   );
 }
 
-function Rule({ icon, text }: { icon: string; text: string }) {
+function Rule({ icon, text, small }: { icon: string; text: string; small?: boolean }) {
   return (
-    <div className="flex items-start gap-3 text-sm">
-      <span>{icon}</span>
-      <span className="text-slate-300">{text}</span>
+    <div className={`flex items-center gap-3 ${small ? 'text-xs' : 'text-sm'}`}>
+      <span className="w-5 text-center flex-shrink-0">{icon}</span>
+      <span className={small ? 'text-slate-400' : 'text-slate-300'}>{text}</span>
     </div>
   );
 }
