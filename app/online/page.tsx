@@ -11,10 +11,18 @@ export default function OnlineLobbyPage() {
   const setRoom = useOnlineStore((s) => s.setRoom);
 
   const [mode, setMode] = useState<'none' | 'create' | 'join'>('none');
-  const [joinCode, setJoinCode] = useState('');
+  const [codeLength, setCodeLength] = useState(0); // ボタンのdisabled制御用
+  const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const isComposing = useRef(false);
+
+  // DOM を直接操作して入力値を正規化（controlled input を使わないことで
+  // multi-tap の "replace" が React の re-render による "append" に化けるのを防ぐ）
+  function applyClean(el: HTMLInputElement) {
+    const val = el.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 4);
+    el.value = val;
+    setCodeLength(val.length);
+  }
 
   async function handleCreate() {
     setLoading(true);
@@ -32,7 +40,7 @@ export default function OnlineLobbyPage() {
   }
 
   async function handleJoin() {
-    const code = joinCode.trim().toUpperCase();
+    const code = (inputRef.current?.value ?? '').trim().toUpperCase();
     if (code.length !== 4) {
       setError('4文字のルームコードを入力してください');
       return;
@@ -100,21 +108,16 @@ export default function OnlineLobbyPage() {
       {mode === 'join' && (
         <div className="flex flex-col gap-4 w-full max-w-xs items-center">
           <input
+            ref={inputRef}
             type="text"
-            value={joinCode}
             onChange={(e) => {
-              if (isComposing.current) return;
-              setJoinCode(e.target.value.toUpperCase());
+              if (e.nativeEvent.isComposing) return;
+              applyClean(e.target);
             }}
-            onCompositionStart={() => { isComposing.current = true; }}
             onCompositionEnd={(e) => {
-              isComposing.current = false;
-              // 変換確定時に値を反映（変換前のゴミを除いて英数字のみ抽出）
-              const raw = (e.target as HTMLInputElement).value;
-              setJoinCode(raw.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 4));
+              applyClean(e.target as HTMLInputElement);
             }}
             placeholder="ルームコード（4文字）"
-            maxLength={4}
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="characters"
@@ -123,7 +126,7 @@ export default function OnlineLobbyPage() {
           />
           <button
             onClick={handleJoin}
-            disabled={loading || joinCode.length !== 4}
+            disabled={loading || codeLength !== 4}
             className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-lg transition-colors disabled:opacity-50"
           >
             {loading ? '接続中...' : '参加する'}
