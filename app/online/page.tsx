@@ -11,17 +11,45 @@ export default function OnlineLobbyPage() {
   const setRoom = useOnlineStore((s) => s.setRoom);
 
   const [mode, setMode] = useState<'none' | 'create' | 'join'>('none');
-  const [codeLength, setCodeLength] = useState(0); // ボタンのdisabled制御用
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [codeLength, setCodeLength] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // DOM を直接操作して入力値を正規化（controlled input を使わないことで
-  // multi-tap の "replace" が React の re-render による "append" に化けるのを防ぐ）
-  function applyClean(el: HTMLInputElement) {
-    const val = el.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 4);
-    el.value = val;
-    setCodeLength(val.length);
+  // 4分割ボックス用 ref（1文字ずつ別inputにすることでIMEが入り込む余地をなくす）
+  const ref0 = useRef<HTMLInputElement>(null);
+  const ref1 = useRef<HTMLInputElement>(null);
+  const ref2 = useRef<HTMLInputElement>(null);
+  const ref3 = useRef<HTMLInputElement>(null);
+  const boxRefs = [ref0, ref1, ref2, ref3];
+
+  function getCode() {
+    return boxRefs.map(r => r.current?.value ?? '').join('');
+  }
+
+  function syncLength() {
+    setCodeLength(boxRefs.filter(r => r.current?.value).length);
+  }
+
+  function handleBoxInput(idx: number, e: React.FormEvent<HTMLInputElement>) {
+    const el = e.currentTarget;
+    const char = el.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(-1);
+    el.value = char;
+    syncLength();
+    if (char && idx < 3) boxRefs[idx + 1].current?.focus();
+  }
+
+  function handleBoxKeyDown(idx: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Backspace' && !e.currentTarget.value && idx > 0) {
+      boxRefs[idx - 1].current?.focus();
+    }
+  }
+
+  function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 4);
+    text.split('').forEach((char, i) => { if (boxRefs[i].current) boxRefs[i].current!.value = char; });
+    setCodeLength(text.length);
+    boxRefs[Math.min(text.length, 3)].current?.focus();
   }
 
   async function handleCreate() {
@@ -40,7 +68,7 @@ export default function OnlineLobbyPage() {
   }
 
   async function handleJoin() {
-    const code = (inputRef.current?.value ?? '').trim().toUpperCase();
+    const code = getCode().trim().toUpperCase();
     if (code.length !== 4) {
       setError('4文字のルームコードを入力してください');
       return;
@@ -107,26 +135,24 @@ export default function OnlineLobbyPage() {
 
       {mode === 'join' && (
         <div className="flex flex-col gap-4 w-full max-w-xs items-center">
-          <input
-            ref={inputRef}
-            type="text"
-            onKeyDown={(e) => {
-              // 英数字・制御キー以外はIMEを含め全てブロック
-              const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
-              if (!allowed.includes(e.key) && !/^[A-Za-z0-9]$/.test(e.key)) {
-                e.preventDefault();
-              }
-            }}
-            onInput={(e) => {
-              applyClean(e.target as HTMLInputElement);
-            }}
-            placeholder="ルームコード（4文字）"
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="characters"
-            inputMode="url"
-            className="w-full py-3 px-4 rounded-xl bg-slate-800 border border-slate-600 text-white text-center text-2xl font-mono tracking-widest uppercase outline-none focus:border-emerald-400"
-          />
+          <div className="flex gap-2 w-full justify-center">
+            {([ref0, ref1, ref2, ref3] as React.RefObject<HTMLInputElement>[]).map((ref, idx) => (
+              <input
+                key={idx}
+                ref={ref}
+                type="text"
+                maxLength={2}
+                onInput={(e) => handleBoxInput(idx, e)}
+                onKeyDown={(e) => handleBoxKeyDown(idx, e)}
+                onPaste={idx === 0 ? handlePaste : undefined}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="characters"
+                inputMode="url"
+                className="w-14 h-16 rounded-xl bg-slate-800 border border-slate-600 text-white text-center text-2xl font-mono uppercase outline-none focus:border-emerald-400 caret-transparent"
+              />
+            ))}
+          </div>
           <button
             onClick={handleJoin}
             disabled={loading || codeLength !== 4}
