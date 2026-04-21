@@ -7,9 +7,12 @@ interface Props {
   grid: GridCell[];
   currentRound: number;
   isRevealing: boolean;
+  myCardPendingIndex?: number;
+  opponentCardPendingIndex?: number;
+  opponentLabel?: string;
 }
 
-export default function Grid({ grid, currentRound, isRevealing }: Props) {
+export default function Grid({ grid, currentRound, isRevealing, myCardPendingIndex, opponentCardPendingIndex, opponentLabel }: Props) {
   const currentCellIndex = currentRound - 1;
 
   // 完成したラインを計算（ゲーム全体で表示）
@@ -31,6 +34,9 @@ export default function Grid({ grid, currentRound, isRevealing }: Props) {
           isCurrent={i === currentCellIndex}
           isRevealing={isRevealing && i === currentCellIndex}
           winnerLines={winnerLines}
+          myCardPending={myCardPendingIndex !== undefined && i === myCardPendingIndex}
+          opponentCardPending={opponentCardPendingIndex !== undefined && i === opponentCardPendingIndex}
+          opponentLabel={opponentLabel}
         />
       ))}
     </div>

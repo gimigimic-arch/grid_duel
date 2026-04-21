@@ -12,6 +12,8 @@ interface Props {
   cpuCard: Card | null;
   result: 'player' | 'cpu' | 'tie' | null;
   suitMatch: boolean;
+  playerLabel?: string;   // デフォルト "YOU"
+  opponentLabel?: string; // デフォルト "CPU"
 }
 
 const RESULT_CONFIG = {
@@ -48,7 +50,7 @@ function FlipCard({ card, delay }: { card: Card; delay: number }) {
   );
 }
 
-export default function RevealOverlay({ show, isPlaced, playerCard, cpuCard, result, suitMatch }: Props) {
+export default function RevealOverlay({ show, isPlaced, playerCard, cpuCard, result, suitMatch, playerLabel = 'YOU', opponentLabel = 'CPU' }: Props) {
   const cfg = result ? RESULT_CONFIG[result] : null;
 
   return (
@@ -64,15 +66,15 @@ export default function RevealOverlay({ show, isPlaced, playerCard, cpuCard, res
           {/* カード2枚 */}
           <div className="flex items-center gap-8">
             <div className="flex flex-col items-center gap-2">
-              <span className="text-xs font-mono text-red-300 tracking-widest">CPU</span>
-              {isPlaced ? <FaceDownCard /> : <FlipCard card={cpuCard} delay={0} />}
+              <span className="text-xs font-mono text-blue-300 tracking-widest">{playerLabel}</span>
+              {isPlaced ? <FaceDownCard /> : <FlipCard card={playerCard} delay={0} />}
             </div>
 
             <span className="text-2xl font-bold text-slate-500">vs</span>
 
             <div className="flex flex-col items-center gap-2">
-              <span className="text-xs font-mono text-blue-300 tracking-widest">YOU</span>
-              {isPlaced ? <FaceDownCard /> : <FlipCard card={playerCard} delay={0.2} />}
+              <span className="text-xs font-mono text-red-300 tracking-widest">{opponentLabel}</span>
+              {isPlaced ? <FaceDownCard /> : <FlipCard card={cpuCard} delay={0.2} />}
             </div>
           </div>
 
@@ -103,8 +105,11 @@ export default function RevealOverlay({ show, isPlaced, playerCard, cpuCard, res
                   <span className={`text-4xl font-black tracking-widest ${cfg.color}`}>
                     {cfg.label}
                   </span>
-                  {suitMatch && result !== 'tie' && (
-                    <span className="text-sm text-yellow-300 font-mono">✦ スート一致</span>
+                  {suitMatch && result === 'player' && (
+                    <span className="text-sm text-yellow-300 font-mono">✦ SUIT MATCH +2pt</span>
+                  )}
+                  {suitMatch && result === 'cpu' && (
+                    <span className="text-sm text-slate-400 font-mono">✦ SUIT MATCH -2pt</span>
                   )}
                 </motion.div>
               )}

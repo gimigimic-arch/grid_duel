@@ -157,13 +157,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
         pendingDraw: { player: willPlayerDraw, cpu: willCpuDraw },
       });
     } else if (phase === 'RESOLVING') {
+      set({ phase: 'NEXT_ROUND' });
+    } else if (phase === 'NEXT_ROUND') {
       const nextRound = round + 1;
       if (isGameOver(nextRound)) {
         set({ phase: 'GAME_OVER', winner: determineWinner(state.playerScore, state.cpuScore) });
-      } else {
-        set({ phase: 'NEXT_ROUND' });
+        return;
       }
-    } else if (phase === 'NEXT_ROUND') {
+
       const { pendingDraw } = state;
       let newPlayerHand = playerHand.filter((c) => c.id !== selectedCard?.id);
       let newCpuHand = cpuHand.filter((c) => c.id !== cpuSelectedCard?.id);
@@ -178,7 +179,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       set({
         phase: 'SELECTING',
-        round: round + 1,
+        round: nextRound,
         selectedCard: null,
         cpuSelectedCard: null,
         playerHand: newPlayerHand,

@@ -6,9 +6,11 @@ interface Props {
   playerScore: number;
   cpuScore: number;
   round: number;
+  playerLabel?: string;
+  opponentLabel?: string;
 }
 
-export default function ScoreBoard({ playerScore, cpuScore, round }: Props) {
+export default function ScoreBoard({ playerScore, cpuScore, round, playerLabel = 'YOU', opponentLabel = 'CPU' }: Props) {
   const total = playerScore + cpuScore;
   // プレイヤー側バー幅（%）: 0〜100
   const playerPct = total === 0 ? 50 : Math.round((playerScore / total) * 100);
@@ -26,7 +28,7 @@ export default function ScoreBoard({ playerScore, cpuScore, round }: Props) {
       <div className="flex items-center justify-between">
         <div className="text-center w-16">
           <div className="text-3xl font-bold text-blue-400">{playerScore}</div>
-          <div className="text-xs text-slate-500 font-mono">YOU</div>
+          <div className="text-xs text-slate-500 font-mono">{playerLabel}</div>
         </div>
 
         <div className="text-center flex-1">
@@ -36,7 +38,7 @@ export default function ScoreBoard({ playerScore, cpuScore, round }: Props) {
 
         <div className="text-center w-16">
           <div className="text-3xl font-bold text-red-400">{cpuScore}</div>
-          <div className="text-xs text-slate-500 font-mono">CPU</div>
+          <div className="text-xs text-slate-500 font-mono">{opponentLabel}</div>
         </div>
       </div>
 

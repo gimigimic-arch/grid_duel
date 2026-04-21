@@ -43,6 +43,14 @@ export default function GamePage() {
   // 捨て札モーダル
   const [discardOpen, setDiscardOpen] = useState(false);
 
+  // スコア表示はREVEALING完了後（NEXT_ROUND以降）に更新
+  const [displayScore, setDisplayScore] = useState({ player: 0, cpu: 0 });
+  useEffect(() => {
+    if (phase === 'NEXT_ROUND' || phase === 'SELECTING' || phase === 'GAME_OVER') {
+      setDisplayScore({ player: playerScore, cpu: cpuScore });
+    }
+  }, [phase, playerScore, cpuScore]);
+
   // フェーズがMULLIGANに戻ったら選択をリセット
   useEffect(() => {
     if (phase === 'MULLIGAN') {
@@ -59,11 +67,12 @@ export default function GamePage() {
     });
   };
 
-  const isSelecting = phase === 'SELECTING';
-  const isPlaced   = phase === 'PLACED';
-  const isRevealing = phase === 'REVEALING';
-  const isGameOver  = phase === 'GAME_OVER';
-  const isMulligan  = phase === 'MULLIGAN';
+  const isSelecting  = phase === 'SELECTING';
+  const isPlaced     = phase === 'PLACED';
+  const isRevealing  = phase === 'REVEALING';
+  const isResolving  = phase === 'RESOLVING';
+  const isGameOver   = phase === 'GAME_OVER';
+  const isMulligan   = phase === 'MULLIGAN';
 
   // ---- マリガン画面 ----
   if (isMulligan) {
@@ -161,7 +170,7 @@ export default function GamePage() {
       </div>
 
       {/* スコア + 優勢バー */}
-      <ScoreBoard playerScore={playerScore} cpuScore={cpuScore} round={round} />
+      <ScoreBoard playerScore={displayScore.player} cpuScore={displayScore.cpu} round={round} />
 
       {/* CPU エリア */}
       <div className="w-full max-w-sm flex items-center justify-between px-1">
@@ -179,7 +188,7 @@ export default function GamePage() {
       {/* ラウンド結果 + ドロー通知 */}
       <div className="h-6 flex items-center justify-center">
         <AnimatePresence mode="wait">
-          {phase === 'NEXT_ROUND' && (pendingDraw.player || pendingDraw.cpu) ? (
+          {phase === 'NEXT_ROUND' && (pendingDraw.player || pendingDraw.cpu) && grid.some(c => c.owner === null) ? (
             <motion.span
               key="draw"
               initial={{ opacity: 0, y: 4 }}
@@ -202,7 +211,7 @@ export default function GamePage() {
           {hasDiscard && (
             <button
               onClick={() => setDiscardOpen(true)}
-              className="text-[10px] text-slate-500 hover:text-slate-300 font-mono underline transition-colors"
+              className="text-[10px] text-slate-300 font-mono bg-slate-700 hover:bg-slate-600 px-2 py-0.5 rounded-full transition-colors"
             >
               捨て札
             </button>

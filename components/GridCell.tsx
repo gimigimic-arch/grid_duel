@@ -3,6 +3,7 @@
 import { GridCell as GridCellType, CENTER_INDEX } from '@/lib/types';
 import { motion, type TargetAndTransition } from 'framer-motion';
 import PlayingCard from './PlayingCard';
+import { B1 } from '@letele/playing-cards';
 
 interface Props {
   cell: GridCellType;
@@ -10,9 +11,12 @@ interface Props {
   isCurrent: boolean;
   isRevealing: boolean;
   winnerLines: number[][];
+  myCardPending?: boolean;
+  opponentCardPending?: boolean;
+  opponentLabel?: string;
 }
 
-export default function GridCellComponent({ cell, index, isCurrent, isRevealing, winnerLines }: Props) {
+export default function GridCellComponent({ cell, index, isCurrent, isRevealing, winnerLines, myCardPending, opponentCardPending, opponentLabel = 'CPU' }: Props) {
   const isCenter = index === CENTER_INDEX;
   const isInWinnerLine = winnerLines.some((line) => line.includes(index));
   const isCaptured = !!cell.owner;
@@ -68,31 +72,62 @@ export default function GridCellComponent({ cell, index, isCurrent, isRevealing,
         <span className="absolute top-1 right-1 text-[10px] text-slate-600 font-mono">0pt</span>
       )}
 
-      {/* スート一致バッジ（中央マスは0ptなので非表示） */}
-      {cell.suitMatch && isCaptured && !isCenter && (
-        <span className={`absolute top-1 left-1 text-[10px] font-bold ${isPlayerWin ? 'text-yellow-400' : 'text-slate-500'}`}>
-          ✦2pt
-        </span>
-      )}
 
       {/* 空マス */}
-      {!isCaptured && (
+      {!isCaptured && !myCardPending && !opponentCardPending && (
         <span className="text-slate-700 text-2xl select-none">
           {isCurrent ? '▶' : '·'}
         </span>
+      )}
+
+      {/* 両者または片方が伏せカードを出している */}
+      {!isCaptured && (myCardPending || opponentCardPending) && (
+        <div className="flex gap-1 items-center">
+          {/* 自分側（左） */}
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="text-[9px] text-blue-400 font-mono">YOU</span>
+            {myCardPending ? (
+              <motion.div
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                <B1 width={36} height={50} />
+              </motion.div>
+            ) : (
+              <div style={{ width: 36, height: 50 }} className="rounded border border-slate-700 bg-slate-800/40" />
+            )}
+          </div>
+          <span className="text-slate-700 text-[10px]">vs</span>
+          {/* 相手側（右） */}
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="text-[9px] text-slate-500 font-mono">相手</span>
+            {opponentCardPending ? (
+              <motion.div
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                <B1 width={36} height={50} />
+              </motion.div>
+            ) : (
+              <div style={{ width: 36, height: 50 }} className="rounded border border-slate-700 bg-slate-800/40" />
+            )}
+          </div>
+        </div>
       )}
 
       {/* カード表示 — 自分が取ったマスは明るく、落としたマスは暗く */}
       {isCaptured && cell.playerCard && cell.cpuCard && (
         <div className={`flex gap-1 items-center ${isCpuWin ? 'opacity-40' : 'opacity-90'}`}>
           <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[9px] text-slate-500 font-mono">CPU</span>
-            <FlipCard card={cell.cpuCard} delay={0} />
+            <span className="text-[9px] text-blue-400 font-mono">YOU</span>
+            <FlipCard card={cell.playerCard} delay={0} />
           </div>
           <span className="text-slate-600 text-xs">vs</span>
           <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[9px] text-slate-500 font-mono">YOU</span>
-            <FlipCard card={cell.playerCard} delay={0.15} />
+            <span className="text-[9px] text-slate-500 font-mono">{opponentLabel}</span>
+            <FlipCard card={cell.cpuCard} delay={0} />
           </div>
         </div>
       )}

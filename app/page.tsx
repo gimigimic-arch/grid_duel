@@ -19,28 +19,51 @@ export default function Home() {
           <p className="text-slate-200 text-base font-bold">9マスを奪い合い、得点が多い方の勝ち。</p>
         </div>
         {/* ルール本文 */}
-        <div className="px-6 py-4 space-y-3">
-          <Rule icon="▷" text="基本：強い方が制圧 → 1pt" />
-          <p className="text-slate-500 text-xs pl-8">A最強・2最弱（数字が大きいほど強い）</p>
-          <div className="border-t border-slate-700 pt-3 space-y-2">
-            <Rule icon="✦" text="スート一致：弱い方が制圧 → 2pt" small />
+        <div className="px-6 py-4 space-y-4">
+          {/* 勝敗判定 */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-mono text-slate-500 tracking-widest">勝敗判定</p>
+            <Rule icon="▷" text="絵柄が違う → 高い方が制圧 → 1pt" />
+            <p className="text-slate-500 text-xs pl-8">強さ: A &gt; K &gt; Q &gt; J &gt; 10 … 2</p>
+            <div className="bg-slate-800 rounded-lg px-3 py-2 flex items-start gap-3">
+              <span className="text-emerald-400 text-sm flex-shrink-0 mt-0.5">✦</span>
+              <div>
+                <p className="text-slate-200 text-sm font-bold">
+                  絵柄が同じ → 低い方が制圧 → <span className="text-emerald-400">2pt</span>
+                </p>
+              </div>
+            </div>
             <Rule icon="⚪" text="同じ数字 → 引き分け" small />
-            <Rule icon="✨" text="制圧マスが3列並び → +1pt" small />
-            <Rule icon="⭕" text="中央マスは → 0pt" small />
           </div>
+          {/* 得点 */}
           <div className="border-t border-slate-700 pt-3 space-y-2">
+            <p className="text-[10px] font-mono text-slate-500 tracking-widest">得点</p>
+            <Rule icon="✨" text="3マス一列揃え → +1ptボーナス" small />
+            <Rule icon="⭕" text="中央マスは制圧しても無得点" small />
+          </div>
+          {/* その他 */}
+          <div className="border-t border-slate-700 pt-3 space-y-2">
+            <p className="text-[10px] font-mono text-slate-500 tracking-widest">その他</p>
             <Rule icon="🔄" text="開始前に手札を引き直せる（1回）" small />
             <Rule icon="📥" text="制圧された側が山札から1枚引く" small />
           </div>
         </div>
       </div>
 
-      <Link
-        href="/game"
-        className="px-12 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xl transition-colors shadow-lg"
-      >
-        ゲームスタート
-      </Link>
+      <div className="flex flex-col gap-3 w-full max-w-xs">
+        <Link
+          href="/game"
+          className="text-center px-12 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xl transition-colors shadow-lg"
+        >
+          ゲームスタート
+        </Link>
+        <Link
+          href="/online"
+          className="text-center px-12 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-base transition-colors"
+        >
+          オンライン対戦
+        </Link>
+      </div>
 
       <p className="text-slate-600 text-xs font-mono">
         Built with Next.js · TypeScript · Tailwind · Framer Motion · Zustand
