@@ -246,6 +246,7 @@ export default function GamePage() {
         cpuCard={cpuSelectedCard}
         result={lastResult}
         suitMatch={lastSuitMatch}
+        isCenterCell={round === 5}
       />
 
       {/* 捨て札モーダル */}

@@ -462,6 +462,7 @@ export default function OnlineGamePage({
         cpuCard={opCard ?? null}
         result={resultForMe}
         suitMatch={shared.lastSuitMatch ?? false}
+        isCenterCell={resolvedIndex === 4}
         playerLabel="YOU"
         opponentLabel="PLAYER"
       />
@@ -568,7 +569,7 @@ export default function OnlineGamePage({
             className="fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center gap-6 px-4"
           >
             <div className="text-center space-y-2">
-              <p className="text-6xl font-black text-white">{winnerLabel}</p>
+              <p className="text-4xl font-black text-white">{winnerLabel}</p>
               {shared.resigned && (
                 <p className="text-slate-500 text-xs font-mono">
                   {shared.resigned === role ? 'あなたが投了しました' : '相手が投了しました'}

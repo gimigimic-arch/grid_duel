@@ -12,6 +12,7 @@ interface Props {
   cpuCard: Card | null;
   result: 'player' | 'cpu' | 'tie' | null;
   suitMatch: boolean;
+  isCenterCell?: boolean; // 中央マスはポイント0なのでスートマッチ表示なし
   playerLabel?: string;   // デフォルト "YOU"
   opponentLabel?: string; // デフォルト "CPU"
 }
@@ -50,7 +51,7 @@ function FlipCard({ card, delay }: { card: Card; delay: number }) {
   );
 }
 
-export default function RevealOverlay({ show, isPlaced, playerCard, cpuCard, result, suitMatch, playerLabel = 'YOU', opponentLabel = 'CPU' }: Props) {
+export default function RevealOverlay({ show, isPlaced, playerCard, cpuCard, result, suitMatch, isCenterCell = false, playerLabel = 'YOU', opponentLabel = 'CPU' }: Props) {
   const cfg = result ? RESULT_CONFIG[result] : null;
 
   return (
@@ -106,10 +107,14 @@ export default function RevealOverlay({ show, isPlaced, playerCard, cpuCard, res
                     {cfg.label}
                   </span>
                   {suitMatch && result === 'player' && (
-                    <span className="text-sm text-yellow-300 font-mono">✦ SUIT MATCH +2pt</span>
+                    <span className="text-sm text-yellow-300 font-mono">
+                      ✦ SUIT MATCH{isCenterCell ? '' : ' +2pt'}
+                    </span>
                   )}
                   {suitMatch && result === 'cpu' && (
-                    <span className="text-sm text-slate-400 font-mono">✦ SUIT MATCH -2pt</span>
+                    <span className="text-sm text-slate-400 font-mono">
+                      ✦ SUIT MATCH{isCenterCell ? '' : ' -2pt'}
+                    </span>
                   )}
                 </motion.div>
               )}
