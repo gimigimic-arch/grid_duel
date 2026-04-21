@@ -30,12 +30,21 @@ export default function OnlineLobbyPage() {
     setCodeLength(boxRefs.filter(r => r.current?.value).length);
   }
 
-  function handleBoxInput(idx: number, e: React.FormEvent<HTMLInputElement>) {
-    const el = e.currentTarget;
+  function commitChar(idx: number, el: HTMLInputElement) {
     const char = el.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(-1);
     el.value = char;
     syncLength();
     if (char && idx < 3) boxRefs[idx + 1].current?.focus();
+  }
+
+  function handleBoxInput(idx: number, e: React.FormEvent<HTMLInputElement>) {
+    // IME変換中（isComposing）は無視して onCompositionEnd に任せる
+    if ((e.nativeEvent as InputEvent).isComposing) return;
+    commitChar(idx, e.currentTarget);
+  }
+
+  function handleBoxCompositionEnd(idx: number, e: React.CompositionEvent<HTMLInputElement>) {
+    commitChar(idx, e.currentTarget as HTMLInputElement);
   }
 
   function handleBoxKeyDown(idx: number, e: React.KeyboardEvent<HTMLInputElement>) {
@@ -143,6 +152,7 @@ export default function OnlineLobbyPage() {
                 type="text"
                 maxLength={2}
                 onInput={(e) => handleBoxInput(idx, e)}
+                onCompositionEnd={(e) => handleBoxCompositionEnd(idx, e)}
                 onKeyDown={(e) => handleBoxKeyDown(idx, e)}
                 onPaste={idx === 0 ? handlePaste : undefined}
                 autoComplete="off"
