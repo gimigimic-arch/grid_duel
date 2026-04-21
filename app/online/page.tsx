@@ -110,18 +110,21 @@ export default function OnlineLobbyPage() {
           <input
             ref={inputRef}
             type="text"
-            onChange={(e) => {
-              if (e.nativeEvent.isComposing) return;
-              applyClean(e.target);
+            onKeyDown={(e) => {
+              // 英数字・制御キー以外はIMEを含め全てブロック
+              const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+              if (!allowed.includes(e.key) && !/^[A-Za-z0-9]$/.test(e.key)) {
+                e.preventDefault();
+              }
             }}
-            onCompositionEnd={(e) => {
+            onInput={(e) => {
               applyClean(e.target as HTMLInputElement);
             }}
             placeholder="ルームコード（4文字）"
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="characters"
-            inputMode="latin"
+            inputMode="url"
             className="w-full py-3 px-4 rounded-xl bg-slate-800 border border-slate-600 text-white text-center text-2xl font-mono tracking-widest uppercase outline-none focus:border-emerald-400"
           />
           <button
