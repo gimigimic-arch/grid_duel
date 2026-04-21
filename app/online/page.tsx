@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnlineStore } from '@/store/onlineStore';
 import { Card } from '@/lib/types';
@@ -14,6 +14,7 @@ export default function OnlineLobbyPage() {
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isComposing = useRef(false);
 
   async function handleCreate() {
     setLoading(true);
@@ -101,9 +102,23 @@ export default function OnlineLobbyPage() {
           <input
             type="text"
             value={joinCode}
-            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+            onChange={(e) => {
+              if (isComposing.current) return;
+              setJoinCode(e.target.value.toUpperCase());
+            }}
+            onCompositionStart={() => { isComposing.current = true; }}
+            onCompositionEnd={(e) => {
+              isComposing.current = false;
+              // 変換確定時に値を反映（変換前のゴミを除いて英数字のみ抽出）
+              const raw = (e.target as HTMLInputElement).value;
+              setJoinCode(raw.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 4));
+            }}
             placeholder="ルームコード（4文字）"
             maxLength={4}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="characters"
+            inputMode="latin"
             className="w-full py-3 px-4 rounded-xl bg-slate-800 border border-slate-600 text-white text-center text-2xl font-mono tracking-widest uppercase outline-none focus:border-emerald-400"
           />
           <button
