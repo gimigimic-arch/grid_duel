@@ -1,7 +1,9 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { GridCell, LINES } from '@/lib/types';
+import ShareButtons from './ShareButtons';
 
 interface Props {
   winner: 'player' | 'cpu' | 'draw';
@@ -16,6 +18,7 @@ function countLinesFor(grid: GridCell[], owner: 'player' | 'cpu'): number {
 }
 
 export default function GameOverModal({ winner, playerScore, cpuScore, grid, onRestart }: Props) {
+  const router = useRouter();
   const playerLines = countLinesFor(grid, 'player');
   const cpuLines = countLinesFor(grid, 'cpu');
 
@@ -58,7 +61,33 @@ export default function GameOverModal({ winner, playerScore, cpuScore, grid, onR
         >
           もう一度
         </button>
+
+        <button
+          onClick={() => router.push('/online')}
+          className="w-full mt-3 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-base transition-colors"
+        >
+          友達と対戦する
+        </button>
+
+        <div className="pt-1">
+          <ShareButtons
+            text={buildShareText(winner, playerScore, cpuScore)}
+            url={typeof window !== 'undefined' ? `${window.location.origin}/online` : '/online'}
+            label="結果をシェア"
+          />
+        </div>
       </motion.div>
     </motion.div>
   );
+}
+
+function buildShareText(
+  winner: 'player' | 'cpu' | 'draw',
+  playerScore: number,
+  cpuScore: number
+): string {
+  const result =
+    winner === 'player' ? '勝利' : winner === 'cpu' ? '敗北' : '引き分け';
+  const mark = winner === 'cpu' ? '...' : '！';
+  return `GRID DUELでCPUに${result}${mark}（${playerScore}pt vs ${cpuScore}pt）\n一緒にやろう！`;
 }

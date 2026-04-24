@@ -10,6 +10,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "GRID DUEL",
   description: "トランプ × 3×3 制圧カードゲーム",
+  openGraph: {
+    title: "GRID DUEL",
+    description: "トランプ × 3×3 制圧カードゲーム",
+    type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GRID DUEL",
+    description: "トランプ × 3×3 制圧カードゲーム",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({

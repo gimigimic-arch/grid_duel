@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useOnlineStore, OnlineGridCell } from '@/store/onlineStore';
 import { useOnlineSync } from '@/hooks/useOnlineSync';
 import { Card, GridCell } from '@/lib/types';
+import ShareButtons from '@/components/ShareButtons';
 import Grid from '@/components/Grid';
 import Hand from '@/components/Hand';
 import ScoreBoard from '@/components/ScoreBoard';
@@ -222,11 +223,16 @@ export default function OnlineGamePage({
 
   // ---- ホスト: ゲスト参加待ち ----
   if (localPhase === 'WAITING_FOR_GUEST') {
+    const inviteUrl = typeof window !== 'undefined' ? `${window.location.origin}/online` : '/online';
+    const inviteText = `GRID DUELで対戦しよう！\nルームコード: ${code}`;
     return (
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-8 px-4">
         <div className="text-center space-y-2">
           <p className="text-slate-400 text-sm font-mono">相手にこのコードを共有してください</p>
           <div className="text-6xl font-black tracking-[0.3em] text-emerald-400 font-mono">{code}</div>
+        </div>
+        <div className="w-full max-w-xs">
+          <ShareButtons text={inviteText} url={inviteUrl} label="シェアして招待" />
         </div>
         <p className="text-slate-500 text-sm font-mono animate-pulse">相手の参加を待っています...</p>
         <Link href="/online" className="text-slate-600 text-xs hover:text-slate-400 transition-colors">
