@@ -4,13 +4,11 @@ export type SharePayload = {
 };
 
 export function buildXShareUrl({ text, url }: SharePayload): string {
-  const params = new URLSearchParams({ text: `${text}\n${url}` });
-  return `https://x.com/intent/tweet?${params}`;
+  return `https://x.com/intent/tweet?text=${encodeURIComponent(`${text}\n${url}`)}`;
 }
 
 export function buildLineShareUrl({ text, url }: SharePayload): string {
-  const params = new URLSearchParams({ text: `${text}\n${url}` });
-  return `https://line.me/R/msg/text/?${params}`;
+  return `https://line.me/R/msg/text/?${encodeURIComponent(`${text}\n${url}`)}`;
 }
 
 export function openShare(shareUrl: string): void {
