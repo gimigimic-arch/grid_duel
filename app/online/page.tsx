@@ -1,20 +1,96 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useOnlineStore } from '@/store/onlineStore';
 import { Card } from '@/lib/types';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function OnlineLobbyPage() {
+function RuleModal({ onClose }: { onClose: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center px-4"
+    >
+      <motion.div
+        initial={{ scale: 0.92, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.92, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm overflow-hidden"
+      >
+        <div className="border-b border-slate-700 px-6 py-4 text-center space-y-1">
+          <h2 className="text-emerald-400 font-bold tracking-[0.25em] font-mono text-base mb-2">RULE</h2>
+          <p className="text-slate-200 text-base font-bold">9マスを奪い合い、得点が多い方の勝ち。</p>
+        </div>
+        <div className="px-6 py-4 space-y-4">
+          <div className="space-y-2">
+            <p className="text-[10px] font-mono text-slate-500 tracking-widest">勝敗判定</p>
+            <RuleItem icon="▷" text="絵柄が違う → 高い方が制圧 → 1pt" />
+            <p className="text-slate-500 text-xs pl-8">強さ: A &gt; K &gt; Q &gt; J &gt; 10 … 2</p>
+            <div className="bg-slate-800 rounded-lg px-3 py-2 flex items-start gap-3">
+              <span className="text-emerald-400 text-sm flex-shrink-0 mt-0.5">✦</span>
+              <p className="text-slate-200 text-sm font-bold">
+                絵柄が同じ → 低い方が制圧 → <span className="text-emerald-400">2pt</span>
+              </p>
+            </div>
+            <RuleItem icon="⚪" text="同じ数字 → 引き分け" small />
+          </div>
+          <div className="border-t border-slate-700 pt-3 space-y-2">
+            <p className="text-[10px] font-mono text-slate-500 tracking-widest">得点</p>
+            <RuleItem icon="✨" text="3マス一列揃え → +1ptボーナス" small />
+            <RuleItem icon="⭕" text="中央マスは制圧しても無得点" small />
+          </div>
+          <div className="border-t border-slate-700 pt-3 space-y-2">
+            <p className="text-[10px] font-mono text-slate-500 tracking-widest">その他</p>
+            <RuleItem icon="🔄" text="開始前に手札を引き直せる（1回）" small />
+            <RuleItem icon="📥" text="制圧された側が山札から1枚引く" small />
+          </div>
+        </div>
+        <div className="px-6 pb-5">
+          <button
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold transition-colors"
+          >
+            閉じる
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function RuleItem({ icon, text, small }: { icon: string; text: string; small?: boolean }) {
+  return (
+    <div className={`flex items-center gap-3 ${small ? 'text-xs' : 'text-sm'}`}>
+      <span className="w-5 text-center flex-shrink-0">{icon}</span>
+      <span className={small ? 'text-slate-400' : 'text-slate-300'}>{text}</span>
+    </div>
+  );
+}
+
+function OnlineLobbyInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setRoom = useOnlineStore((s) => s.setRoom);
 
-  const [mode, setMode] = useState<'none' | 'create' | 'join'>('none');
-  const [joinCode, setJoinCode] = useState('');
+  const initialCode = searchParams.get('join')?.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 4) ?? '';
+  const [mode, setMode] = useState<'none' | 'create' | 'join'>(initialCode ? 'join' : 'none');
+  const [joinCode, setJoinCode] = useState(initialCode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ruleOpen, setRuleOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (initialCode && inputRef.current) {
+      inputRef.current.value = initialCode;
+    }
+  }, [initialCode]);
 
   function applyClean(el: HTMLInputElement) {
     const val = el.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 4);
@@ -108,6 +184,7 @@ export default function OnlineLobbyPage() {
           <input
             ref={inputRef}
             type="text"
+            defaultValue={initialCode}
             onInput={(e) => {
               if ((e.nativeEvent as InputEvent).isComposing) return;
               applyClean(e.target as HTMLInputElement);
@@ -131,11 +208,29 @@ export default function OnlineLobbyPage() {
             {loading ? '接続中...' : '参加する'}
           </button>
           {error && <p className="text-red-400 text-sm">{error}</p>}
+          <button
+            onClick={() => setRuleOpen(true)}
+            className="text-slate-500 text-sm hover:text-slate-300 transition-colors"
+          >
+            ルール確認
+          </button>
           <button onClick={() => setMode('none')} className="text-slate-500 text-sm hover:text-slate-300">
             ← 戻る
           </button>
         </div>
       )}
+
+      <AnimatePresence>
+        {ruleOpen && <RuleModal onClose={() => setRuleOpen(false)} />}
+      </AnimatePresence>
     </div>
+  );
+}
+
+export default function OnlineLobbyPage() {
+  return (
+    <Suspense>
+      <OnlineLobbyInner />
+    </Suspense>
   );
 }

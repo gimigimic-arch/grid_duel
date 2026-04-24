@@ -223,7 +223,7 @@ export default function OnlineGamePage({
 
   // ---- ホスト: ゲスト参加待ち ----
   if (localPhase === 'WAITING_FOR_GUEST') {
-    const inviteUrl = typeof window !== 'undefined' ? `${window.location.origin}/online` : '/online';
+    const inviteUrl = typeof window !== 'undefined' ? `${window.location.origin}/online?join=${code}` : `/online?join=${code}`;
     const inviteText = `GRID DUELで対戦しよう！\nルームコード: ${code}`;
     return (
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-8 px-4">
